@@ -1,0 +1,1 @@
+git for-each-ref --sort="-committerdate" --format="%(refname)" refs/remotes | xargs --verbose -n 1 -i git --no-pager diff --name-only "HEAD...{}"
