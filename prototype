@@ -1,1 +1,2 @@
 git for-each-ref --sort="-committerdate" --format="%(refname)" refs/remotes | xargs --verbose -n 1 -i git --no-pager diff --name-only "HEAD...{}"
+git branch -r --no-merged | xargs -n 1 -i git --no-pager whatchanged --since=yesterday --source -1 "HEAD..{}" --
