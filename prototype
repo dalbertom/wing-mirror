@@ -1,2 +1,44 @@
-git for-each-ref --sort="-committerdate" --format="%(refname)" refs/remotes | xargs --verbose -n 1 -i git --no-pager diff --name-only "HEAD...{}"
-git branch -r --no-merged | xargs -n 1 -i git --no-pager whatchanged --since=yesterday --source -1 "HEAD..{}" --
+# git for-each-ref --sort="-committerdate" --format="%(refname)" refs/remotes | xargs --verbose -n 1 -i git --no-pager diff --name-only "HEAD...{}"
+# git branch -r --no-merged | xargs -n 1 -i git --no-pager whatchanged --since=yesterday --source -1 "HEAD..{}" --
+
+# Get files modified in branches updated today
+rm thisids.txt thisfiles.txt thisbranch.txt
+git for-each-ref --sort="-committerdate" --format="%(committerdate:short) %(refname)" refs/remotes | grep `date +%Y-%m-%d` | awk '{print $2}' | while read thisbranch; do
+  git --no-pager diff --name-only master...$thisbranch -- *.java | while read thisfile; do
+    thispatchid=`git diff master...$thisbranch -- $thisfile | git patch-id`
+    echo $thisbranch $thispatchid $thisfile >> thisids.txt
+    echo $thisfile >> thisfiles.txt
+  done
+  echo $thisbranch >> thisbranch.txt
+done
+
+sort thisfiles.txt | uniq > thisfiles.tmp
+mv thisfiles.tmp thisfiles.txt 
+
+# Get branches unmerged that are not stale
+git branch -r --no-merged master | xargs -n 1 git log -1 --oneline --source --since=two.months.ago | awk '{print $2}' > thosebranches.txt
+
+# Get files modified in unmerged branches
+rm thoseids.txt
+while read thisfile; do
+  while read thatbranch; do
+    thatpatchid=`git --no-pager diff master...$thatbranch -- $thisfile | git patch-id`
+    if [ ! -z "$thatpatchid" ]; then
+      echo $thisfile $thatpatchid $thatbranch >> thoseids.txt
+    fi
+  done < thosebranches.txt
+done < thisfiles.txt
+
+rm -rf refs
+for i in `cat thisbranch.txt`; do 
+  mkdir -p $i
+done
+
+awk '{
+  branch=$1
+  id=$2
+  file=$4
+  printf("grep \"%s\" thoseids.txt | grep -v %s | cut -d\" \" -f1,4 >> %s/conflicts.txt\n", file, id, branch)
+}' thisids.txt | bash
+
+find refs -type f -name conflicts.txt | xargs --verbose -n 1 cat
