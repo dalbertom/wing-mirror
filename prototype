@@ -2,8 +2,8 @@
 # git branch -r --no-merged | xargs -n 1 -i git --no-pager whatchanged --since=yesterday --source -1 "HEAD..{}" --
 
 # Get files modified in branches updated today
-rm thisids.txt thisfiles.txt thisbranch.txt
-git for-each-ref --sort="-committerdate" --format="%(committerdate:short) %(refname)" refs/remotes | grep `date +%Y-%m-%d` | awk '{print $2}' | while read thisbranch; do
+rm -f thisids.txt thisfiles.txt thisbranch.txt
+git for-each-ref --sort="-committerdate" --format="%(committerdate:short) %(refname)" refs/remotes | grep `date -d yesterday +%Y-%m-%d` | awk '{print $2}' | while read thisbranch; do
   git --no-pager diff --name-only master...$thisbranch -- *.java | while read thisfile; do
     thispatchid=`git diff master...$thisbranch -- $thisfile | git patch-id`
     echo $thisbranch $thispatchid $thisfile >> thisids.txt
@@ -19,7 +19,7 @@ mv thisfiles.tmp thisfiles.txt
 git branch -r --no-merged master | xargs -n 1 git log -1 --oneline --source --since=two.months.ago | awk '{print $2}' > thosebranches.txt
 
 # Get files modified in unmerged branches
-rm thoseids.txt
+rm -f thoseids.txt
 while read thisfile; do
   while read thatbranch; do
     thatpatchid=`git --no-pager diff master...$thatbranch -- $thisfile | git patch-id`
