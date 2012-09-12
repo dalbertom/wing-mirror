@@ -18,6 +18,14 @@ mv thisfiles.tmp thisfiles.txt
 # Get branches unmerged that are not stale
 git branch -r --no-merged master | xargs -n 1 git log -1 --oneline --source --since=two.months.ago | awk '{print $2}' > thosebranches.txt
 
+rm -rf branches
+while read thatbranch; do
+  git --no-pager diff --name-only master...$thatbranch -- *.java | while read thatfile; do
+    mkdir -p branches/$thatfile
+    echo $thatbranch >> branches/$thatfile/branches.txt
+  done
+done < thosebranches.txt
+
 # Get files modified in unmerged branches
 rm -f thoseids.txt
 while read thisfile; do
@@ -26,7 +34,7 @@ while read thisfile; do
     if [ ! -z "$thatpatchid" ]; then
       echo $thisfile $thatpatchid $thatbranch >> thoseids.txt
     fi
-  done < thosebranches.txt
+  done < branches/$thisfile/branches.txt
 done < thisfiles.txt
 
 rm -rf refs
