@@ -50,3 +50,22 @@ awk '{
 }' thisids.txt | bash
 
 find refs -type f -name conflicts.txt | xargs --verbose -n 1 cat
+
+find refs -type f -name conflicts.txt -size 0 | xargs rm -f
+
+rm -f emailbody.txt
+cat thisbranch.txt | while read conflictbranch; do
+  if [ -e $conflictbranch/conflicts.txt ]; then
+    echo "==CONFLICTSET==" >> emailbody.txt
+    echo `dirname ${conflictbranch#refs/remotes/*}` >> emailbody.txt
+    echo "==SUMMARY==" >> emailbody.txt
+    echo "in ${conflictbranch#refs/remotes/*} with " >> emailbody.txt
+    cat $conflictbranch/conflicts.txt | awk '{print $2}' | sort | uniq >> emailbody.txt
+    echo "==DETAILS==" >> emailbody.txt
+    awk '{print $1}' $conflictbranch/conflicts.txt | sort | uniq | while read conflictfile; do
+      grep $conflictfile $conflictbranch/conflicts.txt | awk -v f=$conflictfile 'BEGIN {b=sprintf("%s:",f)} {b=sprintf("%s %s", b, $2)} END {print b}' >> emailbody.txt
+      echo "--DETAIL--" >> emailbody.txt
+    done
+  fi
+done
+cat emailbody.txt
