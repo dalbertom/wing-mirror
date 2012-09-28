@@ -63,7 +63,7 @@ cat thisbranch.txt | while read conflictbranch; do
     cat $conflictbranch/conflicts.txt | awk '{print $2}' | sort | uniq >> emailbody.txt
     echo "==DETAILS==" >> emailbody.txt
     awk '{print $1}' $conflictbranch/conflicts.txt | sort | uniq | while read conflictfile; do
-      grep $conflictfile $conflictbranch/conflicts.txt | awk -v f=$conflictfile 'BEGIN {b=sprintf("%s:",f)} {b=sprintf("%s %s", b, $2)} END {print b}' >> emailbody.txt
+      grep $conflictfile $conflictbranch/conflicts.txt | head -20 | awk -v f=$conflictfile 'BEGIN {b=sprintf("%s:",f)} {b=sprintf("%s %s", b, $2)} END {print b}' >> emailbody.txt
       echo "--DETAIL--" >> emailbody.txt
     done
   fi
