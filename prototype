@@ -16,7 +16,7 @@ sort thisfiles.txt | uniq > thisfiles.tmp
 mv thisfiles.tmp thisfiles.txt 
 
 # Get branches unmerged that are not stale
-git branch -r --no-merged master | xargs -n 1 git log -1 --oneline --source --since=two.months.ago | awk '{print $2}' > thosebranches.txt
+git branch -r --no-merged master | xargs -n 1 git log -1 --oneline --source --since=two.weeks.ago | awk '{print $2}' > thosebranches.txt
 
 rm -rf branches
 while read thatbranch; do
