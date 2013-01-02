@@ -11,6 +11,7 @@ git for-each-ref --sort="-committerdate" --format="%(committerdate:short) %(refn
   done
   echo $thisbranch >> thisbranch.txt
 done
+if [ ! -e thisids.txt -o ! -e thisbranch.txt ]; then exit 0; fi # shortcircuit, nothing to do
 
 sort thisfiles.txt | uniq > thisfiles.tmp
 mv thisfiles.tmp thisfiles.txt 
