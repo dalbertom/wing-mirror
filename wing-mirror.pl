@@ -33,11 +33,18 @@ close $fthisfiles;
 close $fthisbranch;
 
 # Get branches unmerged that are not stale
-open(my $fthosebranches, ">", "thosebranches.txt") or die "$!";
-print $fthosebranches `git branch -r --no-merged master | xargs -n 1 git log -1 --oneline --source --since=two.weeks.ago | awk '{print \$2}'`;
-close $fthosebranches;
 part2:
 my @thosebranches = `git branch -r --no-merged master`;
+my @nonstale = ();
 foreach(@thosebranches) {
-  print $_, "\n";
+  my @arr = split;
+  my $var = $arr[$#arr];
+  $var = `git log -1 --oneline --source --since=two.weeks.ago $var`;
+  if (length($var) > 0) {
+    @arr = split(/\s/, $var);
+    $var = $arr[1];
+    push @nonstale, $var;
+  }
 }
+@thosebranches = @nonstale;
+print join("\n",@thosebranches);
