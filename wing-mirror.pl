@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 
+goto phase2;
+
 my $date = `date -d yesterday +%Y-%m-%d`;
 my @refs = `git for-each-ref --sort="-committerdate" --format="%(committerdate:short) %(refname)" refs/remotes`;
 # chomp @refs;
@@ -26,14 +28,17 @@ foreach my $ref (@refs) {
   }
   push @thisbranch, $ref;
 }
+@thisfiles = sort @thisfiles;
 
 # Get branches unmerged that are not stale
+phase2:
 my @thosebranches = `git branch -r --no-merged master`;
 my @nonstale = ();
 foreach(@thosebranches) {
   my @arr = split;
   my $var = $arr[$#arr];
-  $var = `git log -1 --oneline --source --since=two.weeks.ago $var`;
+#  $var = `git log -1 --oneline --source --since=two.weeks.ago $var`;
+  $var = `git log -1 --oneline --source --since=two.days.ago $var`;
   if (length($var) > 0) {
     @arr = split(/\s/, $var);
     $var = $arr[1];
@@ -41,4 +46,18 @@ foreach(@thosebranches) {
   }
 }
 @thosebranches = @nonstale;
-print join("\n",@thosebranches);
+my %branches = ();
+foreach my $thatbranch (@thosebranches) {
+  my @thosefiles = `git diff --name-only master...$thatbranch -- *.java`;
+  foreach my $thatfile (@thosefiles) {
+    my @tuple = ($branches{$thatfile}, $thatbranch);
+    print @tuple;
+    $branches{$thatfile} = (@tuple);
+  } 
+}
+print $branches{(keys %branches)[1]};
+
+# Get files modified in unmerged branches
+foreach my $thisfile (@thisfiles) {
+  
+}
